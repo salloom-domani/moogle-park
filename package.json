@@ -7,10 +7,15 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "db:push": "drizzle-kit push"
+    "db:push": "drizzle-kit push",
+    "db:seed": "tsx ./lib/db/seed.ts"
   },
   "dependencies": {
+    "@hookform/resolvers": "^3.9.1",
     "@neondatabase/serverless": "^0.10.3",
+    "@radix-ui/react-avatar": "^1.1.1",
+    "@radix-ui/react-label": "^2.1.0",
+    "@radix-ui/react-slot": "^1.1.0",
     "better-auth": "^0.8.2-beta.1",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
@@ -20,8 +25,10 @@
     "next": "15.0.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-hook-form": "^7.53.2",
     "tailwind-merge": "^2.5.4",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/node": "^20",
