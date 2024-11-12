@@ -7,7 +7,7 @@ type Props = {
 
 export default function AuthLayout({ children }: Props) {
   return (
-    <div className="container relative hidden h-screen flex-col items-center justify-center md:grid lg:max-w-none lg:grid-cols-2 lg:px-0">
+    <div className="h-screen flex flex-col items-center justify-center md:grid lg:max-w-none lg:grid-cols-2 px-8 lg:px-0">
       <SwitchBtn />
       <div className="relative hidden h-full flex-col bg-muted p-10 text-white dark:border-r lg:flex bg-zinc-900">
         <div className="flex flex-col items-center m-auto">
