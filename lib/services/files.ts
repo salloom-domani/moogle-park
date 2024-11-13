@@ -50,7 +50,9 @@ export function updateFile() {
   // update file currnet version
 }
 
-export function restoreFile() {}
+export function restoreFile() {
+  //
+}
 
 export function checkInFile() {}
 
