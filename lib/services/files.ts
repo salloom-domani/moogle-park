@@ -40,7 +40,15 @@ export function deleteFile() {
   // detele file
 }
 
-export function updateFile() {}
+export function updateFile() {
+  // params ownerId, groupId, fileId
+  // check if in group
+  // check if exists
+  // chekc if not used
+  // check if owner of file or owner of group
+  // new version
+  // update file currnet version
+}
 
 export function restoreFile() {}
 
