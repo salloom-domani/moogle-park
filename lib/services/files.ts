@@ -55,12 +55,39 @@ export function restoreFile() {
   //
 }
 
-export function checkInFile() {}
+export function checkInFile() {
+  //params userId, groupId, fileId
+  // check if in group
+  // check if exists
+  // chekc if not used
+  // mark as checkin file
+}
 
-export function checkOutFile() {}
+export function checkOutFile() {
+   //params userId, groupId, fileId
+  // check if in group
+  // check if exists
+  // chekc if file is checkin
+  // check *
+  // mark as checkout file
+  
+}
 
-export function checkInFiles() {}
+export function checkInFiles() {
+  //params userId, groupId, fileId
+  // check if in group
+  // check if exists
+  // chekc if all files are not used
+  // mark all files as checkinfile
+}
 
-export function checkoutFiles() {}
+export function checkoutFiles() {
+   //params userId, groupId, fileId
+  // check if in group
+  // check if exists
+  // chekc if file is checkin
+  // check *
+  // mark files as checkoutfile
+}
 
 export function getUsageReport() {}
