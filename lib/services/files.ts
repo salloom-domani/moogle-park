@@ -52,7 +52,7 @@ export function updateFile() {
 
 export function restoreFile() {
   //
-  //
+  
 }
 
 export function checkInFile() {
@@ -68,7 +68,6 @@ export function checkOutFile() {
   // check if in group
   // check if exists
   // chekc if file is checkin
-  // check *
   // mark as checkout file
   
 }
@@ -85,9 +84,14 @@ export function checkoutFiles() {
    //params userId, groupId, fileId
   // check if in group
   // check if exists
-  // chekc if file is checkin
-  // check *
+  // chekc if files are checkin
   // mark files as checkoutfile
 }
 
-export function getUsageReport() {}
+export function getUsageReport() {
+  //params userId,ownerId, groupId, fileId , reportId
+  // check userId
+  // check groupId
+  // check checkin/out file 
+  // check the update on file
+}
