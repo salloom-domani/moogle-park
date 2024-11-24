@@ -1,6 +1,5 @@
-import { eq } from "drizzle-orm";
-import { db } from "../db/client";
-import * as schema from "../db/schema";
+import * as repo from "../db/repository";
+import { BadRequestError, ForbiddenError, NotFoundError } from "../errors";
 
 export async function addFile(
   fileName: string,
@@ -8,90 +7,166 @@ export async function addFile(
   ownerId: string,
   groupId: number,
 ) {
-  const currentVersion = 0;
+  const file = await repo.files.create(fileName, ownerId, groupId);
+  const version = await repo.versions.create(file.id, fileContent);
 
-  const [file] = await db
-    .insert(schema.files)
-    .values({ name: fileName, groupId, ownerId })
-    .returning();
-
-  const [version] = await db
-    .insert(schema.versions)
-    .values({
-      fileId: file.id,
-      version: currentVersion,
-      content: fileContent,
-    })
-    .returning();
-
-  return db
-    .update(schema.files)
-    .set({ currentVersion: version.id })
-    .where(eq(schema.files.id, file.id));
+  return repo.files.update(file.id, { currentVersion: version.id });
 }
 
-export function deleteFile() {
-  // params ownerId, groupId, fileId
-  // check if in group
-  // check if exists
-  // chekc if not used
-  // check if owner of file or owner of group
-  // delete all versions
-  // detele file
+export async function deleteFile(fileId: string, userId: string) {
+  const file = await repo.files.get(fileId);
+
+  if (!file) {
+    throw new NotFoundError("File not found");
+  }
+
+  if (file.deletedAt) {
+    throw new BadRequestError("File already deleted");
+  }
+
+  if (file.state !== "free") {
+    throw new BadRequestError("File is in use");
+  }
+
+  const group = await repo.groups.get(file.groupId);
+
+  if (file.ownerId !== userId || group.ownerId !== userId) {
+    throw new ForbiddenError("You do not have permission to delete this file");
+  }
+
+  return repo.files.update(file.id, { deletedAt: new Date() });
 }
 
-export function updateFile() {
-  // params ownerId, groupId, fileId
-  // check if in group
-  // check if exists
-  // chekc if not used
-  // check if owner of file or owner of group
-  // new version
-  // update file currnet version
+export async function updateFile(
+  fileId: string,
+  fileContent: string,
+  userId: string,
+) {
+  const file = await repo.files.get(fileId);
+
+  if (!file) {
+    throw new NotFoundError("File not found");
+  }
+
+  if (file.deletedAt) {
+    throw new BadRequestError("File already deleted");
+  }
+
+  if (file.state !== "free") {
+    throw new BadRequestError("File is in use");
+  }
+
+  const member = await repo.members.get(userId);
+
+  if (member.groupId !== file.groupId) {
+    throw new ForbiddenError("You do not have permission to delete this file");
+  }
+
+  const version = await repo.versions.create(file.id, fileContent);
+
+  return repo.files.update(file.id, { currentVersion: version.id });
 }
 
 export function restoreFile() {
   //
-  
 }
 
-export function checkInFile() {
-  //params userId, groupId, fileId
-  // check if in group
-  // check if exists
-  // chekc if not used
-  // mark as checkin file
+export async function checkInFile(fileId: string, userId: string) {
+  const file = await repo.files.get(fileId);
+
+  if (!file) {
+    throw new NotFoundError("File not found");
+  }
+
+  if (file.deletedAt) {
+    throw new BadRequestError("File already deleted");
+  }
+
+  if (file.state !== "free") {
+    throw new BadRequestError("File is in use");
+  }
+
+  const member = await repo.members.get(userId);
+
+  if (member.groupId !== file.groupId) {
+    throw new ForbiddenError("You do not have permission to delete this file");
+  }
+
+  return repo.files.update(file.id, { state: "used" });
 }
 
-export function checkOutFile() {
-   //params userId, groupId, fileId
-  // check if in group
-  // check if exists
-  // chekc if file is checkin
-  // mark as checkout file
-  
+export async function checkOutFile(fileId: string, userId: string) {
+  const file = await repo.files.get(fileId);
+
+  if (!file) {
+    throw new NotFoundError("File not found");
+  }
+
+  if (file.deletedAt) {
+    throw new BadRequestError("File already deleted");
+  }
+
+  if (file.state !== "used") {
+    throw new BadRequestError("File is already free");
+  }
+
+  const member = await repo.members.get(userId);
+
+  if (member.groupId !== file.groupId) {
+    throw new ForbiddenError("You do not have permission to delete this file");
+  }
+
+  return repo.files.update(file.id, { state: "free" });
 }
 
-export function checkInFiles() {
-  //params userId, groupId, fileId
-  // check if in group
-  // check if exists
-  // chekc if all files are not used
-  // mark all files as checkinfile
+export async function checkInFiles(fileIds: string[], userId: string) {
+  const files = await repo.files.getMany(fileIds);
+
+  if (files.some((file) => file.deletedAt)) {
+    throw new BadRequestError("Some files are already deleted");
+  }
+
+  if (files.some((file) => file.state !== "free")) {
+    throw new BadRequestError("Some files are already in use");
+  }
+
+  const member = await repo.members.get(userId);
+
+  if (files.some((file) => member.groupId !== file.groupId)) {
+    throw new ForbiddenError(
+      "You do not have permission to check in some of these files",
+    );
+  }
+
+  return repo.files.updateMany(fileIds, { state: "used" });
 }
 
-export function checkoutFiles() {
-   //params userId, groupId, fileId
-  // check if in group
-  // check if exists
-  // chekc if files are checkin
-  // mark files as checkoutfile
+export async function checkOutFiles(fileIds: string[], userId: string) {
+  const files = await repo.files.getMany(fileIds);
+
+  if (files.some((file) => file.deletedAt)) {
+    throw new BadRequestError("Some files are already deleted");
+  }
+
+  if (files.some((file) => file.state !== "used")) {
+    throw new BadRequestError("Some files are already free");
+  }
+
+  const member = await repo.members.get(userId);
+
+  if (files.some((file) => member.groupId !== file.groupId)) {
+    throw new ForbiddenError(
+      "You do not have permission to check out some of these files",
+    );
+  }
+
+  return repo.files.updateMany(fileIds, { state: "free" });
 }
 
 export function getUsageReport() {
-  //params userId,ownerId, groupId, fileId , reportId
+  // params userId,ownerId, groupId, fileId , reportId
   // check userId
   // check groupId
-  // check checkin/out file 
+  // check checkin/out file
   // check the update on file
 }

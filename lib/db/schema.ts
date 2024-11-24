@@ -22,6 +22,9 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updatedAt").notNull(),
 });
 
+export type User = typeof users.$inferSelect;
+export type CreateUser = typeof users.$inferInsert;
+
 export const sessions = pgTable("sessions", {
   id: text("id").primaryKey(),
   expiresAt: timestamp("expiresAt").notNull(),
@@ -63,6 +66,9 @@ export const groups = pgTable("groups", {
     .references(() => users.id),
 });
 
+export type Group = typeof groups.$inferSelect;
+export type CreateGroup = typeof groups.$inferInsert;
+
 export const groupMembers = pgTable("group_members", {
   groupId: integer()
     .notNull()
@@ -71,6 +77,13 @@ export const groupMembers = pgTable("group_members", {
     .notNull()
     .references(() => users.id),
 });
+
+export type GroupMember = typeof groupMembers.$inferSelect;
+export type CreateGroupMember = typeof groupMembers.$inferInsert;
+
+export const fileState = pgEnum("file_state", ["free", "used"]);
+
+export type FileState = (typeof fileState.enumValues)[number];
 
 export const files = pgTable("files", {
   id: uuid().primaryKey().defaultRandom(),
@@ -82,22 +95,29 @@ export const files = pgTable("files", {
     .notNull()
     .references(() => users.id),
   currentVersion: integer().references((): AnyPgColumn => versions.id),
+  state: fileState().notNull().default("free"),
   createdAt: timestamp().notNull().defaultNow(),
   updatedAt: timestamp()
     .notNull()
     .$onUpdateFn(() => new Date()),
+  deletedAt: timestamp(),
 });
+
+export type File = typeof files.$inferSelect;
+export type CreateFile = typeof files.$inferInsert;
 
 export const versions = pgTable("versions", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   fileId: uuid()
     .notNull()
     .references(() => files.id),
-  version: integer().notNull(),
   content: text(),
   diff: json(),
   createdAt: timestamp().notNull().defaultNow(),
 });
+
+export type Version = typeof versions.$inferSelect;
+export type CreateVersion = typeof versions.$inferInsert;
 
 export const action = pgEnum("action", [
   "create",
@@ -106,6 +126,8 @@ export const action = pgEnum("action", [
   "check-out",
   "restore",
 ]);
+
+export type ActionType = (typeof action.enumValues)[number];
 
 export const actions = pgTable("actions", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -119,3 +141,6 @@ export const actions = pgTable("actions", {
     .references(() => users.id),
   action: action().notNull(),
 });
+
+export type Action = typeof actions.$inferSelect;
+export type CreateAction = typeof actions.$inferInsert;

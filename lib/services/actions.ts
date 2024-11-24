@@ -1,19 +1,15 @@
-export function addAction() {
-    // params ownerId, groupId, fileId 
-    // check ownerId
-    // check groupId
-    //check fileId
-  
+import * as repo from "../db/repository";
+import { ActionType } from "../db/schema";
 
+export function addAction(
+  fileId: string,
+  version: number,
+  userId: string,
+  actionType: ActionType,
+) {
+  return repo.actions.create(fileId, version, userId, actionType);
 }
 
-export function getAllActionsByUser() {
-    // params ownerId,userId, groupId, fileId 
-    // check ownerId
-    // check groupId
-    // check userId
-    // get the created files
-    // get the version of files
-    // get the checkin/out on files
-    // get deleted files
+export function getAllActionsByUser(userId: string, groupId: number) {
+  return repo.actions.getManyByUser(userId, groupId);
 }
