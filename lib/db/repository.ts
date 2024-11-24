@@ -2,6 +2,16 @@ import { eq, and, inArray } from "drizzle-orm";
 import { db } from "../db/client";
 import * as schema from "../db/schema";
 
+export const users = {
+  async get(id: string) {
+    const [user] = await db
+      .select()
+      .from(schema.users)
+      .where(eq(schema.users.id, id));
+    return user;
+  },
+};
+
 export const groups = {
   async get(id: number) {
     const [group] = await db
