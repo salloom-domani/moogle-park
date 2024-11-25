@@ -13,6 +13,10 @@ export async function addFile(
   return repo.files.update(file.id, { currentVersion: version.id });
 }
 
+export async function getFilesInGroup(groupId: number) {
+  return repo.files.getManyByGroup(groupId);
+}
+
 export async function deleteFile(fileId: string, userId: string) {
   const file = await repo.files.get(fileId);
 

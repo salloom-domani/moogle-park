@@ -74,6 +74,14 @@ export const files = {
     return file;
   },
 
+  async getManyByGroup(groupId: number) {
+    const [files] = await db
+      .select()
+      .from(schema.files)
+      .where(eq(schema.files.groupId, groupId));
+    return files;
+  },
+
   async getMany(ids: string[]) {
     const files = await db
       .select()
