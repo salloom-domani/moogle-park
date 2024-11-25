@@ -2,7 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
-import { useSearchParams } from "next/navigation";
+import {useSearchParams} from "next/navigation";
 import { Cloud, File, Inbox, Trash2, Plus } from "lucide-react";
 
 import {
@@ -20,10 +20,12 @@ import {
 } from "@/components/ui/sidebar";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Progress } from "@/components/ui/progress";
+// import {Button} from "@/components/ui/button";
+// import {createGroupAction} from "@/actions/group-action";
 
 export function AppSidebar() {
     const searchParams = useSearchParams();
-
+    // const selectedSegment = useSelectedLayoutSegment();
     const isActive = (view: string) => searchParams.get("view") === view;
 
     return (
@@ -55,10 +57,14 @@ export function AppSidebar() {
                     <SidebarGroupContent className="px-1.5 md:px-0">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <button className="w-[100px] h-[60px] flex items-center gap-2 rounded-2xl bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover">
-                                    <Plus className="w-5 h-5" />
+                                <SidebarMenuButton className="bg-primary text-white w-[100px] h-[60px] rounded-2xl hover:bg-primary-hover">
+                                {/*<Button className="w-[100px] h-[60px] flex items-center gap-2 rounded-2xl bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover"*/}
+                                {/*// onClick={() => createGroupAction({}as any)}*/}
+                                {/*>*/}
+                                    <Plus className="w-5 h-5 " />
                                     New
-                                </button>
+                                {/*</Button>*/}
+                                </SidebarMenuButton>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
                                 <DropdownMenuItem onSelect={() => alert("Create New Folder")}>
@@ -69,6 +75,7 @@ export function AppSidebar() {
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
+
                     </SidebarGroupContent>
                 </SidebarGroup>
                 <SidebarGroup>

@@ -14,12 +14,16 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Folder, List, Grid } from "lucide-react";
 import React from "react";
+// import {getMyGroups} from "@/lib/services/groups";
+// import {auth} from "@/lib/auth";
 
 export default async function DashboardPage({
                                               searchParams,
                                             }: {
   searchParams: { view?: string; viewMode?: string };
 }) {
+  // const session = await auth();
+  // const groups = await getMyGroups(session.id);
   const view = searchParams.view || "";
   const viewMode = searchParams.viewMode || "grid";
 
