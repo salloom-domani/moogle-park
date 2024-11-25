@@ -1,6 +1,10 @@
 import * as repo from "../db/repository";
 import { ForbiddenError } from "../errors";
 
+export function getMyGroups(userId: string) {
+  return repo.groups.getManyByUser(userId);
+}
+
 export function createGroup(name: string, ownerId: string) {
   return repo.groups.create(name, ownerId);
 }

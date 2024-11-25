@@ -21,6 +21,18 @@ export const groups = {
     return group;
   },
 
+  async getManyByUser(userId: string) {
+    const [groups] = await db
+      .select()
+      .from(schema.groups)
+      .innerJoin(
+        schema.groupMembers,
+        eq(schema.groupMembers.groupId, schema.groups.id),
+      )
+      .where(eq(schema.groupMembers.userId, userId));
+    return groups;
+  },
+
   async create(name: string, ownerId: string) {
     const [group] = await db
       .insert(schema.groups)
