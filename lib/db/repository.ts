@@ -1,4 +1,4 @@
-import { eq, and, inArray } from "drizzle-orm";
+import { eq, ne, and, inArray, isNotNull } from "drizzle-orm";
 import { db } from "../db/client";
 import * as schema from "../db/schema";
 
@@ -79,6 +79,19 @@ export const files = {
       .select()
       .from(schema.files)
       .where(eq(schema.files.groupId, groupId));
+    return files;
+  },
+
+  async getManyDeletedByUser(userId: string) {
+    const [files] = await db
+      .select()
+      .from(schema.files)
+      .where(
+        and(
+          eq(schema.files.ownerId, userId),
+          isNotNull(schema.files.deletedAt),
+        ),
+      );
     return files;
   },
 

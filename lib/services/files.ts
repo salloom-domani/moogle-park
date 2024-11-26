@@ -1,6 +1,8 @@
 import * as repo from "../db/repository";
 import { BadRequestError, ForbiddenError, NotFoundError } from "../errors";
 
+// get owner as seperate object
+
 export async function addFile(
   fileName: string,
   fileContent: string,
@@ -15,6 +17,10 @@ export async function addFile(
 
 export async function getFilesInGroup(groupId: number) {
   return repo.files.getManyByGroup(groupId);
+}
+
+export async function getMyDeletedFiles(userId: string) {
+  return repo.files.getManyDeletedByUser(userId);
 }
 
 export async function deleteFile(fileId: string, userId: string) {
