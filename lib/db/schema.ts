@@ -65,9 +65,9 @@ export const verifications = pgTable("verifications", {
 // NOTE: BUSINESS RELATED TABLES
 
 export const groups = pgTable("groups", {
-  id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  name: text().notNull(),
-  ownerId: text()
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  name: text("name").notNull(),
+  ownerId: text("owner_id")
     .notNull()
     .references(() => users.id),
 });
@@ -76,10 +76,10 @@ export type Group = typeof groups.$inferSelect;
 export type CreateGroup = typeof groups.$inferInsert;
 
 export const groupMembers = pgTable("group_members", {
-  groupId: integer()
+  groupId: integer("group_id")
     .notNull()
-    .references(() => groups.id),
-  userId: text()
+    .references(() => groups.id, { onDelete: "cascade" }),
+  userId: text("user_id")
     .notNull()
     .references(() => users.id),
 });
@@ -92,34 +92,36 @@ export const fileState = pgEnum("file_state", ["free", "used"]);
 export type FileState = (typeof fileState.enumValues)[number];
 
 export const files = pgTable("files", {
-  id: uuid().primaryKey().defaultRandom(),
-  name: text().notNull(),
-  groupId: integer()
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  groupId: integer("group_id")
     .notNull()
     .references(() => groups.id),
-  ownerId: text()
+  ownerId: text("owner_id")
     .notNull()
     .references(() => users.id),
-  currentVersion: integer().references((): AnyPgColumn => versions.id),
-  state: fileState().notNull().default("free"),
-  createdAt: timestamp().notNull().defaultNow(),
-  updatedAt: timestamp()
+  currentVersion: integer("current_version").references(
+    (): AnyPgColumn => versions.id,
+  ),
+  state: fileState("state").notNull().default("free"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at")
     .notNull()
     .$onUpdateFn(() => new Date()),
-  deletedAt: timestamp(),
+  deletedAt: timestamp("deleted_at"),
 });
 
 export type File = typeof files.$inferSelect;
 export type CreateFile = typeof files.$inferInsert;
 
 export const versions = pgTable("versions", {
-  id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  fileId: uuid()
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  fileId: uuid("file_id")
     .notNull()
     .references(() => files.id),
-  content: text(),
-  diff: json(),
-  createdAt: timestamp().notNull().defaultNow(),
+  content: text("content"),
+  diff: json("diff"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 export type Version = typeof versions.$inferSelect;
@@ -136,13 +138,13 @@ export const action = pgEnum("action", [
 export type ActionType = (typeof action.enumValues)[number];
 
 export const actions = pgTable("actions", {
-  id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  fileId: uuid()
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  fileId: uuid("file_id")
     .notNull()
     .references(() => files.id),
-  version: integer().notNull(),
-  createdAt: timestamp().notNull().defaultNow(),
-  userId: text()
+  version: integer("version").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  userId: text("user_id")
     .notNull()
     .references(() => users.id),
   action: action().notNull(),

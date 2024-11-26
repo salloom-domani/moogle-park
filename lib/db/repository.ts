@@ -1,4 +1,4 @@
-import { eq, ne, and, inArray, isNotNull } from "drizzle-orm";
+import { eq, and, inArray, isNotNull } from "drizzle-orm";
 import { db } from "../db/client";
 import * as schema from "../db/schema";
 
@@ -22,7 +22,7 @@ export const groups = {
   },
 
   async getManyByUser(userId: string) {
-    const [groups] = await db
+    const groups = await db
       .select()
       .from(schema.groups)
       .innerJoin(

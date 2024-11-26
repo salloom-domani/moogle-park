@@ -5,12 +5,14 @@ export function getMyGroups(userId: string) {
   return repo.groups.getManyByUser(userId);
 }
 
-export function createGroup(name: string, ownerId: string) {
-  return repo.groups.create(name, ownerId);
+export async function createGroup(name: string, ownerId: string) {
+  const group = await repo.groups.create(name, ownerId);
+  return addUserToGroup(group.id, ownerId, ownerId);
 }
 
 export async function deleteGroup(groupId: number, ownerId: string) {
   const isOwner = await isGroupOwner(groupId, ownerId);
+  console.log(isOwner);
   if (!isOwner) {
     throw new ForbiddenError(
       `User ${ownerId} is not the owner of group ${groupId}`,
