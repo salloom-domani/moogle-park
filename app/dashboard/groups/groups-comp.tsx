@@ -40,7 +40,7 @@ export default function GroupComponent({ groups }: GroupsProps) {
       {viewMode === "grid" ? (
         <div>
           <h2 className="text-lg font-semibold mb-4">Folders</h2>
-          <div className="grid grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             {groups.map((folder) => (
               <div
                 key={folder.id}
