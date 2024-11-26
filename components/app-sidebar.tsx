@@ -1,9 +1,8 @@
 "use client";
 
-import React from "react";
+import React, {useState} from "react";
 import Image from "next/image";
-import {useSearchParams} from "next/navigation";
-import { Cloud, File, Inbox, Trash2, Plus } from "lucide-react";
+import {Cloud, File, Inbox, Trash2, Plus} from "lucide-react";
 
 import {
     Sidebar,
@@ -18,15 +17,15 @@ import {
     SidebarMenuItem,
     SidebarRail,
 } from "@/components/ui/sidebar";
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { Progress } from "@/components/ui/progress";
+import {DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem} from "@/components/ui/dropdown-menu";
+import {Progress} from "@/components/ui/progress";
+import {AddFolderPopover} from "@/components/add-new-folder-popup";
 // import {Button} from "@/components/ui/button";
 // import {createGroupAction} from "@/actions/group-action";
 
 export function AppSidebar() {
-    const searchParams = useSearchParams();
-    // const selectedSegment = useSelectedLayoutSegment();
-    const isActive = (view: string) => searchParams.get("view") === view;
+    const isActive = (path: string) => typeof window !== "undefined" && window.location.pathname === path;
+    const [isPopoverOpen, setPopoverOpen] = useState(false);
 
     return (
         <Sidebar collapsible="icon" className="border-r">
@@ -35,7 +34,8 @@ export function AppSidebar() {
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild className="md:h-8 md:p-0">
                             <a href="/dashboard">
-                                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-border text-sidebar-primary-foreground">
+                                <div
+                                    className="flex aspect-square size-8 items-center justify-center rounded-lg bg-border text-sidebar-primary-foreground">
                                     <Image
                                         src="/logo.svg"
                                         alt="Moogle Park logo"
@@ -57,17 +57,15 @@ export function AppSidebar() {
                     <SidebarGroupContent className="px-1.5 md:px-0">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <SidebarMenuButton className="bg-primary text-white w-[100px] h-[60px] rounded-2xl hover:bg-primary-hover">
-                                {/*<Button className="w-[100px] h-[60px] flex items-center gap-2 rounded-2xl bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover"*/}
-                                {/*// onClick={() => createGroupAction({}as any)}*/}
-                                {/*>*/}
-                                    <Plus className="w-5 h-5 " />
+                                <SidebarMenuButton
+                                    className="bg-primary text-white w-[100px] h-[60px] rounded-2xl hover:bg-primary-hover"
+                                >
+                                    <Plus className="w-5 h-5"/>
                                     New
-                                {/*</Button>*/}
                                 </SidebarMenuButton>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
-                                <DropdownMenuItem onSelect={() => alert("Create New Folder")}>
+                                <DropdownMenuItem onSelect={() => setPopoverOpen(true)}>
                                     New Folder
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onSelect={() => alert("Create New File")}>
@@ -86,12 +84,12 @@ export function AppSidebar() {
                                     asChild
                                     className={`${
                                         isActive("groups")
-                                            ? "bg-primary text-white pointer-events-none" 
+                                            ? "bg-primary text-white pointer-events-none"
                                             : "hover:bg-muted"
                                     }`}
                                 >
-                                    <a href="/dashboard?view=groups">
-                                        <Inbox />
+                                    <a href="/dashboard/groups">
+                                        <Inbox/>
                                         <span>Groups</span>
                                     </a>
                                 </SidebarMenuButton>
@@ -100,14 +98,14 @@ export function AppSidebar() {
                                 <SidebarMenuButton
                                     asChild
                                     className={`${
-                                        isActive("files")
+                                        isActive("my-files")
                                             ? "bg-primary text-white pointer-events-none"
                                             : "hover:bg-muted"
                                     }`}
                                 >
-                                    <a href="/dashboard?view=files">
-                                        <File />
-                                        <span>Files</span>
+                                    <a href="/dashboard/my-files">
+                                        <File/>
+                                        <span>My Files</span>
                                     </a>
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
@@ -120,8 +118,8 @@ export function AppSidebar() {
                                             : "hover:bg-muted"
                                     }`}
                                 >
-                                    <a href="/dashboard?view=trash">
-                                        <Trash2 />
+                                    <a href="/dashboard/trash">
+                                        <Trash2/>
                                         <span>Trash</span>
                                     </a>
                                 </SidebarMenuButton>
@@ -135,8 +133,8 @@ export function AppSidebar() {
                         <SidebarMenu>
                             <SidebarMenuItem>
                                 <SidebarMenuButton>
-                                    <Cloud />
-                                    <Progress value={25} />
+                                    <Cloud/>
+                                    <Progress value={25}/>
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
                         </SidebarMenu>
@@ -146,7 +144,8 @@ export function AppSidebar() {
             <SidebarFooter>
                 <div className="p-4">User Profile Section</div>
             </SidebarFooter>
-            <SidebarRail />
+            <SidebarRail/>
+            {isPopoverOpen && <AddFolderPopover isOpen={isPopoverOpen} onCloseAction={() => setPopoverOpen(false)}/>}
         </Sidebar>
     );
 }
