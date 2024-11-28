@@ -95,7 +95,7 @@ export default function GroupComponent({ groups }: GroupsProps) {
               {groups.map((folder) => (
                 <tr key={folder.id} className="hover:bg-muted cursor-pointer">
                   <td className="py-2 px-4 flex items-center gap-2">
-                    <Folder className="w-4 h-4" />
+                    <Folder className="w-4 h-4 flex-shrink-0" />
                     {folder.name}
                   </td>
                   <td className="py-2 px-4">

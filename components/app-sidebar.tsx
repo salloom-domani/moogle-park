@@ -28,9 +28,11 @@ import { AddFolderPopover } from "@/components/add-new-folder-popup";
 // import {Button} from "@/components/ui/button";
 // import {createGroupAction} from "@/actions/group-action";
 
-export function AppSidebar() {
-  const isActive = (path: string) =>
-    typeof window !== "undefined" && window.location.pathname === path;
+type AppSidebarProps = {
+  segment?: string;
+};
+
+export function AppSidebar({ segment }: AppSidebarProps) {
   const [isPopoverOpen, setPopoverOpen] = useState(false);
 
   return (
@@ -69,7 +71,7 @@ export function AppSidebar() {
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuItem onSelect={() => setPopoverOpen(true)}>
-                  New Folder
+                  New Group
                 </DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => alert("Create New File")}>
                   New File
@@ -85,7 +87,7 @@ export function AppSidebar() {
                 <SidebarMenuButton
                   asChild
                   className={`${
-                    isActive("groups")
+                    segment === "groups"
                       ? "bg-primary text-white pointer-events-none"
                       : "hover:bg-muted"
                   }`}
@@ -100,7 +102,7 @@ export function AppSidebar() {
                 <SidebarMenuButton
                   asChild
                   className={`${
-                    isActive("my-files")
+                    segment === "my-files"
                       ? "bg-primary text-white pointer-events-none"
                       : "hover:bg-muted"
                   }`}
@@ -115,7 +117,7 @@ export function AppSidebar() {
                 <SidebarMenuButton
                   asChild
                   className={`${
-                    isActive("trash")
+                    segment === "trash"
                       ? "bg-primary text-white pointer-events-none"
                       : "hover:bg-muted"
                   }`}
