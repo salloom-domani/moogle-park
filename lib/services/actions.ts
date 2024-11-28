@@ -1,5 +1,5 @@
+import { ActionType } from "@prisma/client";
 import * as repo from "../db/repository";
-import { ActionType } from "../db/schema";
 
 export function addAction(
   fileId: string,
@@ -10,6 +10,6 @@ export function addAction(
   return repo.actions.create(fileId, version, userId, actionType);
 }
 
-export function getAllActionsByUser(userId: string, groupId: number) {
+export function getAllActionsByUser(userId: string, groupId: string) {
   return repo.actions.getManyByUser(userId, groupId);
 }

@@ -1,25 +1,24 @@
-import {z} from "zod";
+import { z } from "zod";
 
 export const createGroupSchema = z.object({
-    name: z.string(),
+  name: z.string(),
 });
 
 export const deleteGroupSchema = z.object({
-    groupId: z.number(),
+  groupId: z.string(),
 });
 
 export const addUserToGroupSchema = z.object({
-    groupId: z.number(),
-    userId: z.string(),
+  groupId: z.string(),
+  userId: z.string(),
 });
 
 export const isUserInGroupSchema = z.object({
-    groupId: z.number(),
-    userId: z.string(),
+  groupId: z.string(),
+  userId: z.string(),
 });
 
 export const isGroupOwnerSchema = z.object({
-    groupId: z.number(),
-    ownerId: z.string(),
+  groupId: z.string(),
+  ownerId: z.string(),
 });
-

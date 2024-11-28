@@ -1,0 +1,131 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean
+  image         String?
+  createdAt     DateTime
+  updatedAt     DateTime
+  Session       Session[]
+  Account       Account[]
+  myGroups      Group[]   @relation("owner")
+  groups        Group[]
+  File          File[]
+  Action        Action[]
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime
+  updatedAt             DateTime
+
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime?
+  updatedAt  DateTime?
+
+  @@map("verification")
+}
+
+model Group {
+  id      String @id @default(uuid())
+  name    String
+  ownerId String
+  owner   User   @relation("owner", fields: [ownerId], references: [id])
+  files   File[]
+  users   User[]
+}
+
+model File {
+  id               String    @id @default(uuid())
+  name             String
+  groupId          String
+  group            Group     @relation(fields: [groupId], references: [id])
+  ownerId          String
+  owener           User      @relation(fields: [ownerId], references: [id])
+  state            FileState @default(FREE)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  deletedAt        DateTime?
+  actions          Action[]
+  currentVersionId Int?
+  currentVersion   Version?  @relation("current_version", fields: [currentVersionId], references: [id])
+  versions         Version[] @relation("versions")
+}
+
+model Version {
+  id            Int      @id @default(autoincrement())
+  fileId        String
+  file          File     @relation("versions", fields: [fileId], references: [id])
+  content       String?
+  diff          Json?    @db.Json
+  createdAt     DateTime @default(now())
+  current_files File[]   @relation("current_version")
+}
+
+model Action {
+  id         Int        @id @default(autoincrement())
+  fileId     String
+  file       File       @relation(fields: [fileId], references: [id])
+  userId     String
+  user       User       @relation(fields: [userId], references: [id])
+  actionType ActionType
+  createdAt  DateTime   @default(now())
+}
+
+enum ActionType {
+  CREATE
+  DELETE
+  CHECK_IN
+  CHECK_OUT
+  RESTORE
+}
+
+enum FileState {
+  FREE
+  USED
+}

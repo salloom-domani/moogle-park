@@ -1,169 +1,126 @@
-import { eq, and, inArray, isNotNull } from "drizzle-orm";
+import { ActionType, FileState, Prisma } from "@prisma/client";
 import { db } from "../db/client";
-import * as schema from "../db/schema";
 
 export const users = {
   async get(id: string) {
-    const [user] = await db
-      .select()
-      .from(schema.users)
-      .where(eq(schema.users.id, id));
-    return user;
+    return db.user.findUnique({ where: { id } });
   },
 };
 
 export const groups = {
-  async get(id: number) {
-    const [group] = await db
-      .select()
-      .from(schema.groups)
-      .where(eq(schema.groups.id, id));
-    return group;
+  async get(id: string) {
+    return db.group.findUnique({ where: { id } });
   },
 
   async getManyByUser(userId: string) {
-    const groups = await db
-      .select()
-      .from(schema.groups)
-      .innerJoin(
-        schema.groupMembers,
-        eq(schema.groupMembers.groupId, schema.groups.id),
-      )
-      .where(eq(schema.groupMembers.userId, userId));
-    return groups;
+    const user = await db.user.findUnique({
+      where: { id: userId },
+      include: { groups: true },
+    });
+    return user?.groups!;
   },
 
   async create(name: string, ownerId: string) {
-    const [group] = await db
-      .insert(schema.groups)
-      .values({ name, ownerId })
-      .returning();
-    return group;
+    return db.group.create({ data: { name, ownerId } });
   },
 
-  async delete(id: number) {
-    return db.delete(schema.groups).where(eq(schema.groups.id, id));
+  async delete(id: string) {
+    return db.group.delete({ where: { id } });
   },
 };
 
 export const members = {
-  async get(userId: string) {
-    const [member] = await db
-      .select()
-      .from(schema.groupMembers)
-      .where(eq(schema.groupMembers.userId, userId));
-
-    return member;
-  },
-
-  async create(groupId: number, userId: string) {
-    const [member] = await db
-      .insert(schema.groupMembers)
-      .values({ groupId, userId })
-      .returning();
-    return member;
+  // async get(userId: string) {
+  //   const [member] = await db
+  //     .select()
+  //     .from(schema.groupMembers)
+  //     .where(eq(schema.groupMembers.userId, userId));
+  //
+  //   return member;
+  // },
+  //
+  async create(groupId: string, userId: string) {
+    return db.group.update({
+      where: { id: groupId },
+      data: { users: { connect: { id: userId } } },
+    });
   },
 };
 
 export const files = {
   async get(id: string) {
-    const [file] = await db
-      .select()
-      .from(schema.files)
-      .where(eq(schema.files.id, id));
-    return file;
+    return db.file.findUnique({ where: { id } });
   },
 
-  async getManyByGroup(groupId: number) {
-    const [files] = await db
-      .select()
-      .from(schema.files)
-      .where(eq(schema.files.groupId, groupId));
-    return files;
+  async getManyByGroup(groupId: string) {
+    return db.file.findMany({ where: { groupId } });
   },
 
   async getManyDeletedByUser(userId: string) {
-    const [files] = await db
-      .select()
-      .from(schema.files)
-      .where(
-        and(
-          eq(schema.files.ownerId, userId),
-          isNotNull(schema.files.deletedAt),
-        ),
-      );
-    return files;
+    return db.file.findMany({
+      where: {
+        ownerId: userId,
+        deletedAt: { not: null },
+      },
+    });
   },
 
   async getMany(ids: string[]) {
-    const files = await db
-      .select()
-      .from(schema.files)
-      .where(inArray(schema.files.id, ids));
-    return files;
+    return db.file.findMany({ where: { id: { in: ids } } });
   },
 
-  async create(name: string, ownerId: string, groupId: number) {
-    const [file] = await db
-      .insert(schema.files)
-      .values({ name, groupId, ownerId })
-      .returning();
-    return file;
+  async create(name: string, ownerId: string, groupId: string) {
+    return db.file.create({
+      data: { name, ownerId, groupId },
+    });
   },
 
-  async update(id: string, data: Partial<schema.CreateFile>) {
-    return db.update(schema.files).set(data).where(eq(schema.files.id, id));
+  async update(
+    id: string,
+    {
+      currentVersionId,
+      state,
+      deletedAt,
+    }: { currentVersionId?: number; state?: FileState; deletedAt?: Date },
+  ) {
+    return db.file.update({
+      where: { id },
+      data: { currentVersionId, state, deletedAt },
+    });
   },
 
-  async updateMany(ids: string[], data: Partial<schema.CreateFile>) {
-    return db
-      .update(schema.files)
-      .set(data)
-      .where(inArray(schema.files.id, ids));
+  async updateMany(ids: string[], data: Prisma.FileUpdateInput) {
+    return db.file.updateMany({ where: { id: { in: ids } }, data });
   },
 };
 
 export const versions = {
   async create(fileId: string, content: string) {
-    const [version] = await db
-      .insert(schema.versions)
-      .values({
-        fileId,
-        content,
-      })
-      .returning();
-    return version;
+    return db.version.create({ data: { fileId, content } });
   },
 };
 
 export const actions = {
-  async getManyByUser(userId: string, groupId: number) {
-    const actions = await db
-      .select()
-      .from(schema.actions)
-      .innerJoin(
-        schema.groupMembers,
-        eq(schema.groupMembers.userId, schema.actions.userId),
-      )
-      .where(
-        and(
-          eq(schema.groupMembers.groupId, groupId),
-          eq(schema.actions.userId, userId),
-        ),
-      );
-    return actions;
+  async getManyByUser(userId: string, groupId: string) {
+    return db.action.findMany({
+      where: {
+        userId,
+      },
+    });
   },
 
   async create(
     fileId: string,
     version: number,
     userId: string,
-    actionType: schema.ActionType,
+    actionType: ActionType,
   ) {
-    const [action] = await db
-      .insert(schema.actions)
-      .values({ fileId, userId, action: actionType, version })
-      .returning();
-    return action;
+    return db.action.create({
+      data: {
+        file: { connect: { id: fileId } },
+        user: { connect: { id: userId } },
+        actionType,
+      },
+    });
   },
 };

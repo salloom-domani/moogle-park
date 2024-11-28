@@ -1,5 +1,5 @@
 import * as repo from "../db/repository";
-import { ForbiddenError } from "../errors";
+import { ForbiddenError, NotFoundError } from "../errors";
 
 export function getMyGroups(userId: string) {
   return repo.groups.getManyByUser(userId);
@@ -10,9 +10,8 @@ export async function createGroup(name: string, ownerId: string) {
   return addUserToGroup(group.id, ownerId, ownerId);
 }
 
-export async function deleteGroup(groupId: number, ownerId: string) {
+export async function deleteGroup(groupId: string, ownerId: string) {
   const isOwner = await isGroupOwner(groupId, ownerId);
-  console.log(isOwner);
   if (!isOwner) {
     throw new ForbiddenError(
       `User ${ownerId} is not the owner of group ${groupId}`,
@@ -23,7 +22,7 @@ export async function deleteGroup(groupId: number, ownerId: string) {
 }
 
 export async function addUserToGroup(
-  groupId: number,
+  groupId: string,
   userId: string,
   ownerId: string,
 ) {
@@ -37,13 +36,17 @@ export async function addUserToGroup(
   return repo.members.create(groupId, userId);
 }
 
-export async function isUserInGroup(groupId: number, userId: string) {
-  const member = await repo.members.get(userId);
-  return member.groupId === groupId;
+export async function isUserInGroup(groupId: string, userId: string) {
+  const groups = await repo.groups.getManyByUser(userId);
+  return groups.some((group) => group.id === groupId);
 }
 
-export async function isGroupOwner(groupId: number, ownerId: string) {
+export async function isGroupOwner(groupId: string, ownerId: string) {
   const group = await repo.groups.get(groupId);
+
+  if (!group) {
+    throw new NotFoundError("Group not found");
+  }
 
   return group.ownerId === ownerId;
 }

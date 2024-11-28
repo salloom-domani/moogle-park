@@ -1,3 +1,3 @@
-import { drizzle } from "drizzle-orm/neon-http";
+import { PrismaClient } from "@prisma/client";
 
-export const db = drizzle(process.env.DATABASE_URL!);
+export const db = new PrismaClient();

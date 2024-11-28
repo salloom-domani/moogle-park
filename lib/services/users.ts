@@ -6,6 +6,6 @@ export function getUser(userId: string) {
   return repo.users.get(userId);
 }
 
-export function getUsageReport(userId: string, groupId: number) {
+export function getUsageReport(userId: string, groupId: string) {
   return getAllActionsByUser(userId, groupId);
 }

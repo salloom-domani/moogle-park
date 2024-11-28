@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useViewMode } from "@/hooks/use-view-mode";
 import { deleteGroupAction } from "@/actions/groups";
-import { Group } from "@/lib/db/schema";
+import { Group } from "@/lib/db/types";
 import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 import { cn } from "@/lib/utils";
@@ -26,7 +26,7 @@ export default function GroupComponent({ groups }: GroupsProps) {
 
   const { executeAsync } = useAction(deleteGroupAction);
 
-  async function handleDeleteGroup(groupId: number) {
+  async function handleDeleteGroup(groupId: string) {
     try {
       await executeAsync({ groupId });
       router.refresh();
@@ -41,9 +41,9 @@ export default function GroupComponent({ groups }: GroupsProps) {
         <div>
           <h2 className="text-lg font-semibold mb-4">Folders</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            {groups.map((folder) => (
+            {groups.map((group) => (
               <div
-                key={folder.id}
+                key={group.id}
                 className={cn(
                   "flex items-center justify-between rounded-lg border p-4 hover:bg-muted cursor-pointer",
                 )}
@@ -52,7 +52,7 @@ export default function GroupComponent({ groups }: GroupsProps) {
                   <span className="text-muted-foreground">
                     <Folder className="w-5 h-5" />
                   </span>
-                  <span className="text-sm">{folder.name}</span>
+                  <span className="text-sm">{group.name}</span>
                 </div>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -60,17 +60,17 @@ export default function GroupComponent({ groups }: GroupsProps) {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem
-                      onClick={() => console.log("Rename:", folder.id)}
+                      onClick={() => console.log("Rename:", group.id)}
                     >
                       Rename
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                      onClick={() => console.log("Share:", folder.id)}
+                      onClick={() => console.log("Share:", group.id)}
                     >
                       Share
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                      onClick={() => handleDeleteGroup(folder.id)}
+                      onClick={() => handleDeleteGroup(group.id)}
                     >
                       Remove
                     </DropdownMenuItem>

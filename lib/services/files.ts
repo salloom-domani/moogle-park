@@ -7,15 +7,15 @@ export async function addFile(
   fileName: string,
   fileContent: string,
   ownerId: string,
-  groupId: number,
+  groupId: string,
 ) {
   const file = await repo.files.create(fileName, ownerId, groupId);
   const version = await repo.versions.create(file.id, fileContent);
 
-  return repo.files.update(file.id, { currentVersion: version.id });
+  return repo.files.update(file.id, { currentVersionId: version.id });
 }
 
-export async function getFilesInGroup(groupId: number) {
+export async function getFilesInGroup(groupId: string) {
   return repo.files.getManyByGroup(groupId);
 }
 
@@ -34,11 +34,15 @@ export async function deleteFile(fileId: string, userId: string) {
     throw new BadRequestError("File already deleted");
   }
 
-  if (file.state !== "free") {
+  if (file.state !== "FREE") {
     throw new BadRequestError("File is in use");
   }
 
   const group = await repo.groups.get(file.groupId);
+
+  if (!group) {
+    throw new NotFoundError("Group not found");
+  }
 
   if (file.ownerId !== userId || group.ownerId !== userId) {
     throw new ForbiddenError("You do not have permission to delete this file");
@@ -62,19 +66,19 @@ export async function updateFile(
     throw new BadRequestError("File already deleted");
   }
 
-  if (file.state !== "free") {
+  if (file.state !== "FREE") {
     throw new BadRequestError("File is in use");
   }
 
-  const member = await repo.members.get(userId);
+  const groups = await repo.groups.getManyByUser(userId);
 
-  if (member.groupId !== file.groupId) {
+  if (!groups.some((group) => group.id === file.groupId)) {
     throw new ForbiddenError("You do not have permission to delete this file");
   }
 
   const version = await repo.versions.create(file.id, fileContent);
 
-  return repo.files.update(file.id, { currentVersion: version.id });
+  return repo.files.update(file.id, { currentVersionId: version.id });
 }
 
 export function restoreFile() {
@@ -92,17 +96,17 @@ export async function checkInFile(fileId: string, userId: string) {
     throw new BadRequestError("File already deleted");
   }
 
-  if (file.state !== "free") {
+  if (file.state !== "FREE") {
     throw new BadRequestError("File is in use");
   }
 
-  const member = await repo.members.get(userId);
+  const groups = await repo.groups.getManyByUser(userId);
 
-  if (member.groupId !== file.groupId) {
+  if (!groups.some((group) => group.id === file.groupId)) {
     throw new ForbiddenError("You do not have permission to delete this file");
   }
 
-  return repo.files.update(file.id, { state: "used" });
+  return repo.files.update(file.id, { state: "USED" });
 }
 
 export async function checkOutFile(fileId: string, userId: string) {
@@ -116,17 +120,17 @@ export async function checkOutFile(fileId: string, userId: string) {
     throw new BadRequestError("File already deleted");
   }
 
-  if (file.state !== "used") {
+  if (file.state !== "USED") {
     throw new BadRequestError("File is already free");
   }
 
-  const member = await repo.members.get(userId);
+  const groups = await repo.groups.getManyByUser(userId);
 
-  if (member.groupId !== file.groupId) {
+  if (!groups.some((group) => group.id === file.groupId)) {
     throw new ForbiddenError("You do not have permission to delete this file");
   }
 
-  return repo.files.update(file.id, { state: "free" });
+  return repo.files.update(file.id, { state: "FREE" });
 }
 
 export async function checkInFiles(fileIds: string[], userId: string) {
@@ -136,19 +140,23 @@ export async function checkInFiles(fileIds: string[], userId: string) {
     throw new BadRequestError("Some files are already deleted");
   }
 
-  if (files.some((file) => file.state !== "free")) {
+  if (files.some((file) => file.state !== "FREE")) {
     throw new BadRequestError("Some files are already in use");
   }
 
-  const member = await repo.members.get(userId);
+  const groups = await repo.groups.getManyByUser(userId);
 
-  if (files.some((file) => member.groupId !== file.groupId)) {
+  const canDo = files.every((file) =>
+    groups.some((group) => group.id === file.groupId),
+  );
+
+  if (!canDo) {
     throw new ForbiddenError(
       "You do not have permission to check in some of these files",
     );
   }
 
-  return repo.files.updateMany(fileIds, { state: "used" });
+  return repo.files.updateMany(fileIds, { state: "USED" });
 }
 
 export async function checkOutFiles(fileIds: string[], userId: string) {
@@ -158,19 +166,23 @@ export async function checkOutFiles(fileIds: string[], userId: string) {
     throw new BadRequestError("Some files are already deleted");
   }
 
-  if (files.some((file) => file.state !== "used")) {
+  if (files.some((file) => file.state !== "USED")) {
     throw new BadRequestError("Some files are already free");
   }
 
-  const member = await repo.members.get(userId);
+  const groups = await repo.groups.getManyByUser(userId);
 
-  if (files.some((file) => member.groupId !== file.groupId)) {
+  const canDo = files.every((file) =>
+    groups.some((group) => group.id === file.groupId),
+  );
+
+  if (!canDo) {
     throw new ForbiddenError(
       "You do not have permission to check out some of these files",
     );
   }
 
-  return repo.files.updateMany(fileIds, { state: "free" });
+  return repo.files.updateMany(fileIds, { state: "FREE" });
 }
 
 export function getUsageReport() {
