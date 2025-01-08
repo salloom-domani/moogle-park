@@ -26,7 +26,9 @@ export default function DashboardLayout({
 }) {
   const [viewMode, setViewMode] = useQueryState("viewMode", {
     defaultValue: "grid",
+    clearOnDefault: false,
   });
+
   const segment = useSelectedLayoutSegment();
 
   return (

@@ -7,13 +7,13 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { useViewMode } from "@/hooks/use-view-mode";
 import { deleteGroupAction } from "@/actions/groups";
 import { Group } from "@/lib/db/types";
 import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 import { cn } from "@/lib/utils";
 import { authClient } from "@/lib/auth-client";
+import { useQueryState } from "nuqs";
 
 type GroupsProps = {
   groups: Group[];
@@ -21,7 +21,10 @@ type GroupsProps = {
 
 export default function GroupComponent({ groups }: GroupsProps) {
   const session = authClient.useSession();
-  const { viewMode } = useViewMode();
+
+  const [viewMode] = useQueryState("viewMode", {
+    defaultValue: "grid",
+  });
   const router = useRouter();
 
   const { executeAsync } = useAction(deleteGroupAction);
