@@ -38,7 +38,7 @@ export async function addUserToGroup(
 
 export async function isUserInGroup(groupId: string, userId: string) {
   const groups = await repo.groups.getManyByUser(userId);
-  return groups.some((group) => group.id === groupId);
+  return groups?.some((group) => group.id === groupId);
 }
 
 export async function isGroupOwner(groupId: string, ownerId: string) {

@@ -10,9 +10,7 @@ export default async function GroupsPage() {
     return redirect("/auth/login");
   }
 
-  const groupsObj = await getMyGroups(session.user.id);
-
-  const groups = groupsObj.map((g) => g.groups);
+  const groups = await getMyGroups(session.user.id);
 
   return <GroupComponent groups={groups} />;
 }

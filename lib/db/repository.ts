@@ -17,7 +17,7 @@ export const groups = {
       where: { id: userId },
       include: { groups: true },
     });
-    return user?.groups!;
+    return user?.groups ?? [];
   },
 
   async create(name: string, ownerId: string) {
@@ -101,6 +101,7 @@ export const versions = {
 };
 
 export const actions = {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async getManyByUser(userId: string, groupId: string) {
     return db.action.findMany({
       where: {
@@ -111,7 +112,7 @@ export const actions = {
 
   async create(
     fileId: string,
-    version: number,
+    _version: number,
     userId: string,
     actionType: ActionType,
   ) {
