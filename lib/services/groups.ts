@@ -21,6 +21,11 @@ export async function deleteGroup(groupId: string, ownerId: string) {
   return repo.groups.delete(groupId);
 }
 
+export async function getGroupMembers(groupId: string) {
+  return repo.groups.getGroupMembers(groupId);
+}
+
+
 export async function addUserToGroup(
   groupId: string,
   userId: string,

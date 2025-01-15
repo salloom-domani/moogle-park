@@ -27,6 +27,10 @@ export const checkInFileSchema = z.object({
   userId: z.string(),
 });
 
+export const getFileByIdSchema = z.object({
+  fileId: z.string().uuid("Invalid file ID"),
+});
+
 export const checkOutFileSchema = z.object({
   fileId: z.string().uuid(),
   userId: z.string(),

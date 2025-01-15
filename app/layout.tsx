@@ -4,6 +4,8 @@ import "./globals.css";
 
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { Suspense } from "react";
+import { Toaster } from "@/components/ui/toaster";
+import { GroupProvider } from "@/context/group-context";
 
 const font = Inter({
   weight: ["400", "500", "700"],
@@ -23,8 +25,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${font.className} antialiased`}>
+      <Toaster />
         <NuqsAdapter>
-          <Suspense>{children}</Suspense>
+            <Suspense>
+                <GroupProvider>{children}</GroupProvider>
+            </Suspense>
         </NuqsAdapter>
       </body>
     </html>

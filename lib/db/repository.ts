@@ -5,11 +5,43 @@ export const users = {
   async get(id: string) {
     return db.user.findUnique({ where: { id } });
   },
+  async getAll() {
+    return db.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        image: true,
+      },
+    });
+  },
 };
 
 export const groups = {
   async get(id: string) {
     return db.group.findUnique({ where: { id } });
+  },
+
+  async getGroupMembers(groupId: string) {
+    const group = await db.group.findUnique({
+      where: { id: groupId },
+      include: {
+        users: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            image: true,
+          },
+        },
+      },
+    });
+
+    if (!group) {
+      throw new Error("Group not found");
+    }
+
+    return group.users;
   },
 
   async getManyByUser(userId: string) {
@@ -49,11 +81,21 @@ export const members = {
 
 export const files = {
   async get(id: string) {
-    return db.file.findUnique({ where: { id } });
+    return db.file.findUnique({
+      where: { id },
+      include: {
+        currentVersion: true,
+      },
+    });
   },
 
-  async getManyByGroup(groupId: string) {
-    return db.file.findMany({ where: { groupId } });
+  async getManyByGroup(groupId: string, filter: Prisma.FileWhereInput = {}) {
+    return db.file.findMany({
+      where: {
+        groupId,
+        ...filter,
+      },
+    });
   },
 
   async getManyDeletedByUser(userId: string) {

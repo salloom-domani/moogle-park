@@ -14,6 +14,10 @@ import { useAction } from "next-safe-action/hooks";
 import { cn } from "@/lib/utils";
 import { authClient } from "@/lib/auth-client";
 import { useQueryState } from "nuqs";
+import { useToast } from "@/hooks/use-toast";
+import {useState} from "react";
+import {Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle} from "@/components/ui/dialog";
+
 
 type GroupsProps = {
   groups: Group[];
@@ -21,22 +25,48 @@ type GroupsProps = {
 
 export default function GroupComponent({ groups }: GroupsProps) {
   const session = authClient.useSession();
+  const { toast } = useToast();
 
   const [viewMode] = useQueryState("viewMode", {
     defaultValue: "grid",
   });
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [deletingGroup, setDeletingGroup] = useState<Group | null>(null);
   const router = useRouter();
 
   const { executeAsync } = useAction(deleteGroupAction);
 
-  async function handleDeleteGroup(groupId: string) {
+  const handleDoubleClick = (group: Group) => {
+    router.push(`/dashboard/files/${group.id}`);
+  };
+
+  const handleDeleteGroup = async () => {
+    if (!deletingGroup) return;
     try {
-      await executeAsync({ groupId });
+      await executeAsync({ groupId: deletingGroup.id });
       router.refresh();
+      toast({
+        title: "Folder deleted successfully. 🎉",
+        description: "Your operation was completed successfully.",
+        variant: "success",
+      });
     } catch (err) {
-      console.error(err);
+      toast({
+        title: "Failed to delete Folder ❌",
+        description: `Something went wrong. Please try again. ${err}`,
+        variant: "destructive",
+      });
+    } finally {
+      setDialogOpen(false);
+      setDeletingGroup(null);
     }
-  }
+  };
+
+  const openDeleteDialog = (group: Group) => {
+    setDeletingGroup(group);
+    setDialogOpen(true);
+  };
+
 
   return (
     <>
@@ -50,6 +80,7 @@ export default function GroupComponent({ groups }: GroupsProps) {
                 className={cn(
                   "flex items-center justify-between rounded-lg border p-4 hover:bg-muted cursor-pointer",
                 )}
+                onDoubleClick={() => handleDoubleClick(group)}
               >
                 <div className="flex items-center gap-2">
                   <span className="text-muted-foreground">
@@ -73,7 +104,7 @@ export default function GroupComponent({ groups }: GroupsProps) {
                       Share
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                      onClick={() => handleDeleteGroup(group.id)}
+                        onClick={() => openDeleteDialog(group)}
                     >
                       Remove
                     </DropdownMenuItem>
@@ -95,16 +126,16 @@ export default function GroupComponent({ groups }: GroupsProps) {
               </tr>
             </thead>
             <tbody>
-              {groups.map((folder) => (
-                <tr key={folder.id} className="hover:bg-muted cursor-pointer">
+              {groups.map((group) => (
+                <tr key={group.id} onDoubleClick={() => handleDoubleClick(group)} className="hover:bg-muted cursor-pointer">
                   <td className="py-2 px-4 flex items-center gap-2">
                     <Folder className="w-4 h-4 flex-shrink-0" />
-                    {folder.name}
+                    {group.name}
                   </td>
                   <td className="py-2 px-4">
-                    {folder.ownerId === session.data?.user.id
+                    {group.ownerId === session.data?.user.id
                       ? "me"
-                      : folder.ownerId}
+                      : group.ownerId}
                   </td>
                   <td className="py-2 px-4">-</td>
                   <td className="py-2 px-4">-</td>
@@ -114,6 +145,30 @@ export default function GroupComponent({ groups }: GroupsProps) {
           </table>
         </div>
       )}
+
+      <Dialog open={dialogOpen} onOpenChange={() => setDialogOpen(false)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Deletion</DialogTitle>
+          </DialogHeader>
+          <p>Are you sure you want to delete this folder? This action cannot be undone.</p>
+          <DialogFooter>
+            <button
+                className="px-4 py-2 bg-gray-200 rounded-md"
+                onClick={() => setDialogOpen(false)}
+            >
+              Cancel
+            </button>
+            <button
+                className="px-4 py-2 bg-red-500 text-white rounded-md"
+                onClick={handleDeleteGroup}
+            >
+              Delete
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </>
   );
 }

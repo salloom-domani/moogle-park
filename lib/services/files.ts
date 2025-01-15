@@ -16,8 +16,9 @@ export async function addFile(
 }
 
 export async function getFilesInGroup(groupId: string) {
-  return repo.files.getManyByGroup(groupId);
+  return repo.files.getManyByGroup(groupId, { deletedAt: null });
 }
+
 
 export async function getMyDeletedFiles(userId: string) {
   return repo.files.getManyDeletedByUser(userId);

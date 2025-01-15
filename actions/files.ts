@@ -5,23 +5,24 @@ import {
     addFileSchema,
     deleteFileSchema,
     updateFileSchema,
-    getFilesInGroupSchema,
+    // getFilesInGroupSchema,
     checkInFileSchema,
     checkOutFileSchema,
     checkInFilesSchema,
-    checkOutFilesSchema,
+    checkOutFilesSchema, getFileByIdSchema,
 } from "@/lib/schemas/files";
 
 import {
     addFile,
     deleteFile,
     updateFile,
-    getFilesInGroup,
+    // getFilesInGroup,
     checkInFile,
     checkOutFile,
     checkInFiles,
     checkOutFiles,
 } from "@/lib/services/files";
+import {files} from "@/lib/db/repository";
 
 export const addFileAction = authActionClient
     .metadata({actionName: "addFile"})
@@ -47,13 +48,13 @@ export const updateFileAction = authActionClient
         return {ok: true, message: "File updated", data: updatedFile};
     });
 
-export const getFilesInGroupAction = authActionClient
-    .metadata({actionName: "getFilesInGroup"})
-    .schema(getFilesInGroupSchema)
-    .action(async ({parsedInput: {groupId}}) => {
-        const files = await getFilesInGroup(groupId);
-        return {ok: true, data: files};
-    });
+// export const getFilesInGroupAction = authActionClient
+//     .metadata({actionName: "getFilesInGroup"})
+//     .schema(getFilesInGroupSchema)
+//     .action(async ({parsedInput: {groupId}}) => {
+//         const files = await getFilesInGroup(groupId);
+//         return {ok: true, data: files};
+//     });
 
 export const checkInFileAction = authActionClient
     .metadata({actionName: "checkInFile"})
@@ -86,3 +87,20 @@ export const checkOutFilesAction = authActionClient
         const files = await checkOutFiles(fileIds, userId);
         return {ok: true, message: "Files checked out", data: files};
     });
+export const getFileByIdAction = authActionClient
+    .metadata({ actionName: "getFileById" })
+    .schema(getFileByIdSchema)
+    .action(async ({ parsedInput: { fileId } }) => {
+        const file = await files.get(fileId);
+        if (!file) {
+            throw new Error("File not found");
+        }
+        return {
+            ok: true,
+            data: {
+                ...file,
+                content: file.currentVersion?.content || "",
+            },
+        };
+    });
+

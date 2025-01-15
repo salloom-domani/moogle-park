@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import { Cloud, File, Inbox, Trash2, Plus } from "lucide-react";
+import { Cloud, Inbox, Trash2, Plus } from "lucide-react";
 
 import {
   Sidebar,
@@ -30,9 +30,10 @@ import { AddFolderPopover } from "@/components/add-new-folder-popup";
 
 type AppSidebarProps = {
   segment?: string;
+  session: { user: { name: string; email: string; image?: string | null } } | null;
 };
 
-export function AppSidebar({ segment }: AppSidebarProps) {
+export function AppSidebar({ segment, session }: AppSidebarProps) {
   const [isPopoverOpen, setPopoverOpen] = useState(false);
 
   return (
@@ -73,9 +74,6 @@ export function AppSidebar({ segment }: AppSidebarProps) {
                 <DropdownMenuItem onSelect={() => setPopoverOpen(true)}>
                   New Group
                 </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => alert("Create New File")}>
-                  New File
-                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </SidebarGroupContent>
@@ -95,21 +93,6 @@ export function AppSidebar({ segment }: AppSidebarProps) {
                   <a href="/dashboard/groups">
                     <Inbox />
                     <span>Groups</span>
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  className={`${
-                    segment === "my-files"
-                      ? "bg-primary text-white pointer-events-none"
-                      : "hover:bg-muted"
-                  }`}
-                >
-                  <a href="/dashboard/my-files">
-                    <File />
-                    <span>My Files</span>
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -146,7 +129,18 @@ export function AppSidebar({ segment }: AppSidebarProps) {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <div className="p-4">User Profile Section</div>
+        <div className="flex items-center gap-4 p-4 rounded-lg">
+          <Image
+              src={session?.user.image || "/default-avatar.png"}
+              alt="User Avatar"
+              width={48}
+              height={48}
+              className="rounded-full"
+          />
+          <div className="flex-1">
+            <p className="text-sm font-semibold">{session?.user.name}</p>
+          </div>
+        </div>
       </SidebarFooter>
       <SidebarRail />
       {isPopoverOpen && (

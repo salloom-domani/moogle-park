@@ -13,6 +13,7 @@ import { createGroupAction } from "@/actions/groups";
 
 import { useAction } from "next-safe-action/hooks";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
 
 interface AddFolderPopoverProps {
   isOpen: boolean;
@@ -25,6 +26,7 @@ export const AddFolderPopover: React.FC<AddFolderPopoverProps> = ({
 }) => {
   const router = useRouter();
   const [groupName, setGroupName] = useState("");
+  const { toast } = useToast();
 
   const { executeAsync, isPending, result } = useAction(createGroupAction);
 
@@ -33,8 +35,18 @@ export const AddFolderPopover: React.FC<AddFolderPopoverProps> = ({
       await executeAsync({ name: groupName });
       onCloseAction();
       router.refresh();
+
+      toast({
+        title: "Folder Created 🎉",
+        description: "The folder has been created successfully.",
+        variant: "success",
+      });
     } catch (err) {
-      console.error(err);
+      toast({
+        title: "Failed to Create Folder ❌",
+        description: `Failed to create the folder. Please try again. ${err}`,
+        variant: "destructive",
+      });
     }
   }
 

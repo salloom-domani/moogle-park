@@ -9,3 +9,7 @@ export function getUser(userId: string) {
 export function getUsageReport(userId: string, groupId: string) {
   return getAllActionsByUser(userId, groupId);
 }
+
+export async function getAllUsers() {
+  return repo.users.getAll();
+}
