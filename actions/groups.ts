@@ -2,18 +2,18 @@
 
 import { authActionClient } from "@/lib/safe-action";
 import {
-  createGroupSchema,
-  deleteGroupSchema,
-  addUserToGroupSchema,
-  isUserInGroupSchema,
-  isGroupOwnerSchema,
+    createGroupSchema,
+    deleteGroupSchema,
+    addUserToGroupSchema,
+    isUserInGroupSchema,
+    isGroupOwnerSchema, renameGroupSchema,
 } from "@/lib/schemas/groups";
 import {
-  createGroup,
-  deleteGroup,
-  addUserToGroup,
-  isUserInGroup,
-  isGroupOwner,
+    createGroup,
+    deleteGroup,
+    addUserToGroup,
+    isUserInGroup,
+    isGroupOwner, renameGroup,
 } from "@/lib/services/groups";
 import { revalidatePath } from "next/cache";
 
@@ -55,6 +55,14 @@ export const isUserInGroupAction = authActionClient
     const isMember = await isUserInGroup(groupId, userId);
     return { ok: true, data: { isMember } };
   });
+
+export const renameGroupAction = authActionClient
+    .metadata({ actionName: "renameGroup" })
+    .schema(renameGroupSchema)
+    .action(async ({ parsedInput: { groupId, newName, userId } }) => {
+        const group = await renameGroup(groupId, newName, userId);
+        return { ok: true, message: "Group renamed", data: group };
+    });
 
 export const isGroupOwnerAction = authActionClient
   .metadata({ actionName: "isGroupOwner" })

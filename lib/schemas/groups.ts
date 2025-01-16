@@ -13,6 +13,12 @@ export const addUserToGroupSchema = z.object({
   userId: z.string(),
 });
 
+export const renameGroupSchema = z.object({
+  groupId: z.string().uuid("Invalid group ID"),
+  newName: z.string().min(1, "New name is required"),
+  userId: z.string(),
+});
+
 export const isUserInGroupSchema = z.object({
   groupId: z.string(),
   userId: z.string(),

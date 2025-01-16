@@ -21,9 +21,25 @@ export async function deleteGroup(groupId: string, ownerId: string) {
   return repo.groups.delete(groupId);
 }
 
+export async function renameGroup(groupId: string, newName: string, ownerId: string) {
+  const group = await repo.groups.get(groupId);
+
+  if (!group) {
+    throw new NotFoundError("Group not found");
+  }
+
+  if (group.ownerId !== ownerId) {
+    throw new ForbiddenError("You do not have permission to rename this group");
+  }
+
+  return repo.groups.rename(groupId, newName);
+}
+
 export async function getGroupMembers(groupId: string) {
   return repo.groups.getGroupMembers(groupId);
 }
+
+
 
 
 export async function addUserToGroup(

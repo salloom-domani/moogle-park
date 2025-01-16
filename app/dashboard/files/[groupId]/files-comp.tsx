@@ -14,7 +14,7 @@ import {
     checkInFileAction,
     checkOutFileAction,
     deleteFileAction,
-    getFileByIdAction,
+    getFileByIdAction, renameFileAction,
     updateFileAction
 } from "@/actions/files";
 import { AddFilePopover } from "@/components/add-new-file-popup";
@@ -24,6 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQueryState } from "nuqs";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
+import {Input} from "@/components/ui/input";
 
 type FileComponentProps = {
     files: FileType[];
@@ -69,6 +70,9 @@ export default function FileComponent({ files,
     const [originalContent, setOriginalContent] = useState("");
     const [updatedContent, setUpdatedContent] = useState("");
     const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+    const [renamingFile, setRenamingFile] = useState<FileType | null>(null);
+    const [newFileName, setNewFileName] = useState("");
+
 
     const { executeAsync: deleteFile } = useAction(deleteFileAction);
     const { executeAsync: checkOutFile } = useAction(checkOutFileAction);
@@ -233,11 +237,11 @@ export default function FileComponent({ files,
                                             <EllipsisVertical className="w-4 h-4 cursor-pointer" />
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end">
-                                            <DropdownMenuItem onClick={() => console.log("Edit:", file.id)}>
-                                                Edit
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => console.log("Share:", file.id)}>
-                                                Share
+                                            <DropdownMenuItem  onClick={() => {
+                                                setRenamingFile(file);
+                                                setNewFileName(file.name);
+                                            }}>
+                                                Rename
                                             </DropdownMenuItem>
                                             <DropdownMenuItem onClick={() => openDeleteDialog(file)}>
                                                 Remove
@@ -254,7 +258,7 @@ export default function FileComponent({ files,
                                 <th className="py-2 px-4">Name</th>
                                 <th className="py-2 px-4">Owner</th>
                                 <th className="py-2 px-4">Last Modified</th>
-                                <th className="py-2 px-4">Size</th>
+                                <th className="py-2 px-4">State</th>
                                 <th className="py-2 px-4">Actions</th>
                             </tr>
                             </thead>
@@ -276,11 +280,11 @@ export default function FileComponent({ files,
                                                 <EllipsisVertical className="w-4 h-4 cursor-pointer" />
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
-                                                <DropdownMenuItem onClick={() => console.log("Edit:", file.id)}>
-                                                    Edit
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => console.log("Share:", file.id)}>
-                                                    Share
+                                                <DropdownMenuItem  onClick={() => {
+                                                    setRenamingFile(file);
+                                                    setNewFileName(file.name);
+                                                }}>
+                                                    Rename
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem onClick={() => openDeleteDialog(file)}>
                                                     Remove
@@ -298,7 +302,7 @@ export default function FileComponent({ files,
 
             {editingFile && (
                 <Dialog open={!!editingFile} onOpenChange={handleCancel}>
-                    <DialogContent className="max-w-4xl mx-auto">
+                    <DialogContent className="max-w-md lg:max-w-4xl mx-auto">
                         <DialogHeader>
                             <DialogTitle>Editing File: {editingFile.name}</DialogTitle>
                         </DialogHeader>
@@ -335,6 +339,59 @@ export default function FileComponent({ files,
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <Dialog open={!!renamingFile} onOpenChange={() => setRenamingFile(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Rename File</DialogTitle>
+                    </DialogHeader>
+                    <Input
+                        type="text"
+                        value={newFileName}
+                        onChange={(e) => setNewFileName(e.target.value)}
+                        className="w-full p-2 border rounded-md"
+                        placeholder="Enter new file name"
+                    />
+                    <DialogFooter>
+                        <Button variant="secondary" onClick={() => setRenamingFile(null)}>
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="default"
+                            onClick={async () => {
+                                if (renamingFile) {
+                                    try {
+                                        await renameFileAction({
+                                            fileId: renamingFile.id,
+                                            newName: newFileName,
+                                            userId: ownerId,
+                                        });
+
+                                        toast({
+                                            title: "File renamed",
+                                            description: `The file has been successfully renamed to ${newFileName}.`,
+                                            variant: "success",
+                                        });
+                                        setRenamingFile(null);
+                                        router.refresh();
+                                    } catch (err) {
+                                        const error = err as Error;
+                                        console.error("Error message:", error.message);
+                                        toast({
+                                            title: "Failed to rename file",
+                                            description: `An error occurred`,
+                                            variant: "destructive",
+                                        });
+                                    }
+                                }
+                            }}
+                        >
+                            Rename
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
 
             <AddFilePopover
                 isOpen={uploadDialogOpen}

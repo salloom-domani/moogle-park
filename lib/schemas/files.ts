@@ -41,6 +41,16 @@ export const checkInFilesSchema = z.object({
   userId: z.string(),
 });
 
+export const renameFileSchema = z.object({
+  fileId: z.string().uuid("Invalid file ID"),
+  newName: z.string().min(1, "New name is required"),
+  userId: z.string(),
+});
+export const restoreFileSchema = z.object({
+  fileId: z.string().uuid("Invalid file ID"),
+  userId: z.string(),
+});
+
 export const checkOutFilesSchema = z.object({
   fileIds: z.array(z.string().uuid()).nonempty(),
   userId: z.string(),

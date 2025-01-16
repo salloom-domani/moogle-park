@@ -64,7 +64,7 @@ export const InviteUsersPopover: React.FC<InviteUsersPopoverProps> = ({
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-xl mx-auto">
+            <DialogContent className="max-w-md sm:max-w-xl mx-auto">
                 <DialogHeader>
                     <DialogTitle>Invite Users to Group</DialogTitle>
                 </DialogHeader>

@@ -7,9 +7,11 @@ import {
     DropdownMenuContent,
     DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
+import { restoreFileAction } from "@/actions/files";
 import { useQueryState } from "nuqs";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import {useRouter} from "next/navigation";
 
 type DeletedFilesProps = {
     deletedFiles: DeletedFileType[];
@@ -27,16 +29,30 @@ interface DeletedFileType {
 
 export default function DeletedFilesComponent({ deletedFiles }: DeletedFilesProps) {
     const { toast } = useToast();
+    const router = useRouter();
+
     const [viewMode] = useQueryState("viewMode", {
         defaultValue: "grid",
     });
 
-    const handleRestoreFile = (fileId: string) => {
-        toast({
-            title: "Restore functionality not implemented",
-            description: `Restore the file with ID: ${fileId}`,
-            variant: "warning",
-        });
+
+    const handleRestoreFile = async (fileId: string, userId: string) => {
+        try {
+            await restoreFileAction({ fileId, userId });
+            toast({
+                title: "File Restored",
+                description: `The file has been successfully restored.`,
+                variant: "success",
+            });
+            router.refresh();
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+            toast({
+                title: "Restore Failed",
+                description: errorMessage,
+                variant: "destructive",
+            });
+        }
     };
 
     return (
@@ -64,7 +80,7 @@ export default function DeletedFilesComponent({ deletedFiles }: DeletedFilesProp
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
                                         <DropdownMenuItem
-                                            onClick={() => handleRestoreFile(deletedFile.id)}
+                                            onClick={() => handleRestoreFile(deletedFile.id, deletedFile.ownerId)}
                                         >
                                             Restore
                                         </DropdownMenuItem>

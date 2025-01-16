@@ -82,9 +82,48 @@ export async function updateFile(
   return repo.files.update(file.id, { currentVersionId: version.id });
 }
 
-export function restoreFile() {
-  //
+export async function restoreFile(fileId: string, userId: string) {
+  const file = await repo.files.get(fileId);
+
+  if (!file) {
+    throw new NotFoundError("File not found");
+  }
+
+  if (!file.deletedAt) {
+    throw new BadRequestError("File is not deleted");
+  }
+
+  const group = await repo.groups.get(file.groupId);
+
+  if (!group) {
+    throw new NotFoundError("Group not found");
+  }
+
+  if (file.ownerId !== userId && group.ownerId !== userId) {
+    throw new ForbiddenError("You do not have permission to restore this file");
+  }
+
+  return repo.files.restore(fileId);
 }
+
+export async function renameFile(fileId: string, newName: string, userId: string) {
+  const file = await repo.files.get(fileId);
+
+  if (!file) {
+    throw new NotFoundError("File not found");
+  }
+  const group = await repo.groups.get(file.groupId);
+
+  if (!group) {
+    throw new NotFoundError("Group not found");
+  }
+
+  if (file.ownerId !== userId && group.ownerId !== userId) {
+    throw new ForbiddenError("You do not have permission to rename this file");
+  }
+  return repo.files.rename(fileId, newName);
+}
+
 
 export async function checkInFile(fileId: string, userId: string) {
   const file = await repo.files.get(fileId);

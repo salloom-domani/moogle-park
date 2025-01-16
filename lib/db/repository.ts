@@ -22,6 +22,18 @@ export const groups = {
     return db.group.findUnique({ where: { id } });
   },
 
+  async rename(groupId: string, newName: string) {
+    const group = await db.group.findUnique({ where: { id: groupId } });
+    if (!group) {
+      throw new Error("Group not found");
+    }
+
+    return db.group.update({
+      where: { id: groupId },
+      data: { name: newName },
+    });
+  },
+
   async getGroupMembers(groupId: string) {
     const group = await db.group.findUnique({
       where: { id: groupId },
@@ -86,6 +98,25 @@ export const files = {
       include: {
         currentVersion: true,
       },
+    });
+  },
+
+  async rename(fileId: string, newName: string) {
+    const file = await db.file.findUnique({ where: { id: fileId } });
+    if (!file) {
+      throw new Error("File not found");
+    }
+
+    return db.file.update({
+      where: { id: fileId },
+      data: { name: newName },
+    });
+  },
+
+  async restore(id: string) {
+    return db.file.update({
+      where: { id },
+      data: { deletedAt: null },
     });
   },
 

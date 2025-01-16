@@ -9,7 +9,7 @@ import {
     checkInFileSchema,
     checkOutFileSchema,
     checkInFilesSchema,
-    checkOutFilesSchema, getFileByIdSchema,
+    checkOutFilesSchema, getFileByIdSchema, restoreFileSchema, renameFileSchema,
 } from "@/lib/schemas/files";
 
 import {
@@ -20,7 +20,7 @@ import {
     checkInFile,
     checkOutFile,
     checkInFiles,
-    checkOutFiles,
+    checkOutFiles, restoreFile, renameFile,
 } from "@/lib/services/files";
 import {files} from "@/lib/db/repository";
 
@@ -87,6 +87,23 @@ export const checkOutFilesAction = authActionClient
         const files = await checkOutFiles(fileIds, userId);
         return {ok: true, message: "Files checked out", data: files};
     });
+
+export const restoreFileAction = authActionClient
+    .metadata({ actionName: "restoreFile" })
+    .schema(restoreFileSchema)
+    .action(async ({ parsedInput: { fileId, userId } }) => {
+        const file = await restoreFile(fileId, userId);
+        return { ok: true, message: "File restored", data: file };
+    });
+
+export const renameFileAction = authActionClient
+    .metadata({ actionName: "renameFile" })
+    .schema(renameFileSchema)
+    .action(async ({ parsedInput: { fileId, newName, userId } }) => {
+        const file = await renameFile(fileId, newName, userId);
+        return { ok: true, message: "File renamed", data: file };
+    });
+
 export const getFileByIdAction = authActionClient
     .metadata({ actionName: "getFileById" })
     .schema(getFileByIdSchema)
