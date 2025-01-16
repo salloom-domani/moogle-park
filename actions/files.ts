@@ -107,17 +107,48 @@ export const renameFileAction = authActionClient
 export const getFileByIdAction = authActionClient
     .metadata({ actionName: "getFileById" })
     .schema(getFileByIdSchema)
-    .action(async ({ parsedInput: { fileId } }) => {
-        const file = await files.get(fileId);
-        if (!file) {
-            throw new Error("File not found");
+    .action(async ({ parsedInput: { fileId, version } }) => {
+        let file;
+
+        if (version === "first") {
+            file = await files.getFirstVersion(fileId);
+
+            if (!file) {
+                throw new Error("File not found");
+            }
+
+            return {
+                ok: true,
+                data: {
+                    content: file.content || "",
+                },
+            };
+        } else if (version === "last") {
+            file = await files.getLastVersion(fileId);
+
+            if (!file) {
+                throw new Error("File not found");
+            }
+            return {
+                ok: true,
+                data: {
+                    content: file.content || "",
+                },
+            };
+        } else {
+            file = await files.get(fileId);
+            if (!file) {
+                throw new Error("File not found");
+            }
+            return {
+                ok: true,
+                data: {
+                    ...file,
+                    content: file.currentVersion?.content || "",
+                },
+            };
         }
-        return {
-            ok: true,
-            data: {
-                ...file,
-                content: file.currentVersion?.content || "",
-            },
-        };
     });
+
+
 

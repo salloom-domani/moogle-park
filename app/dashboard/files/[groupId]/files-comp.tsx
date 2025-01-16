@@ -1,15 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import { FileText, EllipsisVertical } from "lucide-react";
+import {useState} from "react";
+import { Change, diffWords} from "diff";
+import {FileText, EllipsisVertical} from "lucide-react";
 import {
     DropdownMenu,
     DropdownMenuTrigger,
     DropdownMenuContent,
     DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {Button} from "@/components/ui/button";
+import {Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle} from "@/components/ui/dialog";
 import {
     checkInFileAction,
     checkOutFileAction,
@@ -17,13 +18,13 @@ import {
     getFileByIdAction, renameFileAction,
     updateFileAction
 } from "@/actions/files";
-import { AddFilePopover } from "@/components/add-new-file-popup";
-import { InviteUsersPopover } from "@/components/invite-users-to-group-popup";
-import { useAction } from "next-safe-action/hooks";
-import { useToast } from "@/hooks/use-toast";
-import { useQueryState } from "nuqs";
-import { cn } from "@/lib/utils";
-import { useRouter } from "next/navigation";
+import {AddFilePopover} from "@/components/add-new-file-popup";
+import {InviteUsersPopover} from "@/components/invite-users-to-group-popup";
+import {useAction} from "next-safe-action/hooks";
+import {useToast} from "@/hooks/use-toast";
+import {useQueryState} from "nuqs";
+import {cn} from "@/lib/utils";
+import {useRouter} from "next/navigation";
 import {Input} from "@/components/ui/input";
 
 type FileComponentProps = {
@@ -54,17 +55,21 @@ interface User {
 }
 
 
+type FileResponseType = FileType | { content: string };
 
-export default function FileComponent({ files,
+
+export default function FileComponent({
+                                          files,
                                           groupId,
                                           ownerId,
                                           allUsers,
-                                          groupMembers, }: FileComponentProps) {
-    const { toast } = useToast();
+                                          groupMembers,
+                                      }: FileComponentProps) {
+    const {toast} = useToast();
     const router = useRouter();
     const [dialogOpen, setDialogOpen] = useState(false);
     const [deletingFile, setDeletingFile] = useState<FileType | null>(null);
-    const [viewMode] = useQueryState("viewMode", { defaultValue: "grid" });
+    const [viewMode] = useQueryState("viewMode", {defaultValue: "grid"});
     const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
     const [editingFile, setEditingFile] = useState<FileType | null>(null);
     const [originalContent, setOriginalContent] = useState("");
@@ -72,29 +77,36 @@ export default function FileComponent({ files,
     const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
     const [renamingFile, setRenamingFile] = useState<FileType | null>(null);
     const [newFileName, setNewFileName] = useState("");
+    const [comparisonDialogOpen, setComparisonDialogOpen] = useState(false);
+    const [firstVersion, setFirstVersion] = useState<string | null>(null);
+    const [lastVersion, setLastVersion] = useState<string | null>(null);
+    // const [selectedFile, setSelectedFile] = useState<FileType | null>(null);
+    const [diffChanges, setDiffChanges] = useState<Change[]>([]);
 
 
-    const { executeAsync: deleteFile } = useAction(deleteFileAction);
-    const { executeAsync: checkOutFile } = useAction(checkOutFileAction);
-    const { executeAsync: checkInFile } = useAction(checkInFileAction);
-    const { executeAsync: updateFile } = useAction(updateFileAction);
-    const { executeAsync: getFileById } = useAction(getFileByIdAction);
+    const {executeAsync: deleteFile} = useAction(deleteFileAction);
+    const {executeAsync: checkOutFile} = useAction(checkOutFileAction);
+    const {executeAsync: checkInFile} = useAction(checkInFileAction);
+    const {executeAsync: updateFile} = useAction(updateFileAction);
+    const {executeAsync: getFileById} = useAction(getFileByIdAction);
 
     const handleDoubleClick = async (file: FileType) => {
         try {
-            await checkOutFile({ fileId: file.id, userId: ownerId });
+            await checkOutFile({fileId: file.id, userId: ownerId});
 
-            const response = await getFileById({ fileId: file.id });
+            const response = await getFileById({fileId: file.id});
             console.log("Fetched File Response:", response);
 
             if (response && response.data) {
-                const fetchedFile: FileType = response.data.data;
+                const fetchedFile = response.data.data as FileResponseType;
 
-                setEditingFile(fetchedFile);
-                setOriginalContent(fetchedFile.content || "");
-                setUpdatedContent(fetchedFile.content || "");
-            } else {
-                throw new Error("Invalid response from getFileById");
+                if ('id' in fetchedFile) {
+                    setEditingFile(fetchedFile);
+                    setOriginalContent(fetchedFile.content || "");
+                    setUpdatedContent(fetchedFile.content || "");
+                } else {
+                    throw new Error("Invalid response from getFileById");
+                }
             }
         } catch (err) {
             toast({
@@ -130,7 +142,7 @@ export default function FileComponent({ files,
         }
 
         try {
-            await checkInFile({ fileId: editingFile.id, userId: ownerId });
+            await checkInFile({fileId: editingFile.id, userId: ownerId});
             toast({
                 title: "File Checked In ✅",
                 description: "The file is now available for others to edit.",
@@ -149,7 +161,7 @@ export default function FileComponent({ files,
     const handleCancel = async () => {
         if (editingFile) {
             try {
-                await checkInFile({ fileId: editingFile.id, userId: ownerId });
+                await checkInFile({fileId: editingFile.id, userId: ownerId});
             } catch (err) {
                 toast({
                     title: "Failed to Check In File ❌",
@@ -164,7 +176,7 @@ export default function FileComponent({ files,
     const handleDeleteFile = async () => {
         if (!deletingFile) return;
         try {
-            await deleteFile({ fileId: deletingFile.id, userId: deletingFile.ownerId });
+            await deleteFile({fileId: deletingFile.id, userId: deletingFile.ownerId});
             router.refresh();
             toast({
                 title: "File deleted successfully. 🎉",
@@ -185,6 +197,35 @@ export default function FileComponent({ files,
     const openDeleteDialog = (file: FileType) => {
         setDeletingFile(file);
         setDialogOpen(true);
+    };
+    const handleCompareVersions = async (file: FileType) => {
+        try {
+            // Fetch the first and last versions
+            const firstVersionResponse = await getFileById({
+                fileId: file.id,
+                version: "first",
+            });
+            const lastVersionResponse = await getFileById({
+                fileId: file.id,
+                version: "last",
+            });
+
+            const firstContent = firstVersionResponse?.data?.data.content || "";
+            const lastContent = lastVersionResponse?.data?.data.content || "";
+
+            setFirstVersion(firstContent);
+            setLastVersion(lastContent);
+
+            const changes = diffWords(firstContent, lastContent);
+            setDiffChanges(changes);
+            setComparisonDialogOpen(true);
+        } catch (error) {
+            toast({
+                title: "Comparison failed",
+                description: `Could not fetch file versions for comparison. ${error}`,
+                variant: "destructive",
+            });
+        }
     };
 
     return (
@@ -229,19 +270,22 @@ export default function FileComponent({ files,
                                     )}
                                 >
                                     <div className="flex items-center gap-2">
-                                        <FileText className="w-5 h-5 text-muted-foreground" />
+                                        <FileText className="w-5 h-5 text-muted-foreground"/>
                                         <span className="text-sm">{file.name}</span>
                                     </div>
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
-                                            <EllipsisVertical className="w-4 h-4 cursor-pointer" />
+                                            <EllipsisVertical className="w-4 h-4 cursor-pointer"/>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end">
-                                            <DropdownMenuItem  onClick={() => {
+                                            <DropdownMenuItem onClick={() => {
                                                 setRenamingFile(file);
                                                 setNewFileName(file.name);
                                             }}>
                                                 Rename
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => handleCompareVersions(file)}>
+                                                Compare Versions
                                             </DropdownMenuItem>
                                             <DropdownMenuItem onClick={() => openDeleteDialog(file)}>
                                                 Remove
@@ -264,9 +308,10 @@ export default function FileComponent({ files,
                             </thead>
                             <tbody>
                             {files.map((file) => (
-                                <tr key={file.id} onDoubleClick={() => handleDoubleClick(file)} className="hover:bg-muted cursor-pointer">
+                                <tr key={file.id} onDoubleClick={() => handleDoubleClick(file)}
+                                    className="hover:bg-muted cursor-pointer">
                                     <td className="py-2 px-4 flex items-center gap-2">
-                                        <FileText className="w-4 h-4 flex-shrink-0" />
+                                        <FileText className="w-4 h-4 flex-shrink-0"/>
                                         {file.name}
                                     </td>
                                     <td className="py-2 px-4">{file.ownerId || "Unknown"}</td>
@@ -277,14 +322,17 @@ export default function FileComponent({ files,
                                     <td className="py-2 px-4">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
-                                                <EllipsisVertical className="w-4 h-4 cursor-pointer" />
+                                                <EllipsisVertical className="w-4 h-4 cursor-pointer"/>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
-                                                <DropdownMenuItem  onClick={() => {
+                                                <DropdownMenuItem onClick={() => {
                                                     setRenamingFile(file);
                                                     setNewFileName(file.name);
                                                 }}>
                                                     Rename
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => handleCompareVersions(file)}>
+                                                    Compare Versions
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem onClick={() => openDeleteDialog(file)}>
                                                     Remove
@@ -391,6 +439,72 @@ export default function FileComponent({ files,
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            {comparisonDialogOpen && (
+                <Dialog open={comparisonDialogOpen} onOpenChange={() => setComparisonDialogOpen(false)}>
+                    <DialogContent className="max-w-md lg:max-w-6xl mx-auto" style={{ maxHeight: "90vh", overflowY: "auto" }}>
+                        <DialogHeader>
+                            <DialogTitle>Compare Versions</DialogTitle>
+                        </DialogHeader>
+                        <div style={{ display: "flex", gap: "1rem" }}>
+                            <div style={{ flex: 1, minHeight: "300px" }}>
+                                <h4>First Version</h4>
+                                <textarea
+                                    value={firstVersion || ""}
+                                    readOnly
+                                    style={{ width: "100%", height: "100%", resize: "none", overflowY: "auto" }}
+                                />
+                            </div>
+                            <div style={{ flex: 1, minHeight: "300px" }}>
+                                <h4>Last Version</h4>
+                                <textarea
+                                    value={lastVersion || ""}
+                                    readOnly
+                                    style={{ width: "100%", height: "100%", resize: "none", overflowY: "auto" }}
+                                />
+                            </div>
+                        </div>
+                        <div className="pt-5">
+                            <h4>Changes:</h4>
+                            <div
+                                style={{
+                                    whiteSpace: "pre-wrap",
+                                    fontFamily: "monospace",
+                                    maxHeight: "300px",
+                                    overflowY: "auto",
+                                    border: "1px solid #ccc",
+                                    padding: "1rem",
+                                    borderRadius: "4px",
+                                }}
+                            >
+                                {diffChanges.length === 0 ? (
+                                    <p>There are no changes between the two versions.</p>
+                                ) : (
+                                    diffChanges.map((change, idx) =>
+                                            change.added || change.removed ? (
+                                                <span
+                                                    key={idx}
+                                                    style={{
+                                                        background: change.added ? "#e6ffed" : "#ffeef0",
+                                                        textDecoration: change.removed ? "line-through" : "none",
+                                                    }}
+                                                >
+                  {change.value}
+                </span>
+                                            ) : null
+                                    )
+                                )}
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button variant="secondary" onClick={() => setComparisonDialogOpen(false)}>
+                                Close
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            )}
+
 
 
             <AddFilePopover

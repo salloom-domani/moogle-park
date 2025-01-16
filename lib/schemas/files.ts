@@ -27,9 +27,9 @@ export const checkInFileSchema = z.object({
   userId: z.string(),
 });
 
-export const getFileByIdSchema = z.object({
-  fileId: z.string().uuid("Invalid file ID"),
-});
+// export const getFileByIdSchema = z.object({
+//   fileId: z.string().uuid("Invalid file ID"),
+// });
 
 export const checkOutFileSchema = z.object({
   fileId: z.string().uuid(),
@@ -55,3 +55,9 @@ export const checkOutFilesSchema = z.object({
   fileIds: z.array(z.string().uuid()).nonempty(),
   userId: z.string(),
 });
+
+export const getFileByIdSchema = z.object({
+  fileId: z.string().uuid("Invalid file ID"),
+  version: z.enum(["first", "last"]).optional(), // Add the 'version' field
+});
+

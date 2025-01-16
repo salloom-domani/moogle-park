@@ -101,6 +101,20 @@ export const files = {
     });
   },
 
+  async getFirstVersion(fileId: string) {
+    return db.version.findFirst({
+      where: { fileId },
+      orderBy: { createdAt: "asc" },
+    });
+  },
+
+  async getLastVersion(fileId: string) {
+    return db.version.findFirst({
+      where: { fileId },
+      orderBy: { createdAt: "desc" },
+    });
+  },
+
   async rename(fileId: string, newName: string) {
     const file = await db.file.findUnique({ where: { id: fileId } });
     if (!file) {
