@@ -10,6 +10,10 @@ export async function createGroup(name: string, ownerId: string) {
   return addUserToGroup(group.id, ownerId, ownerId);
 }
 
+export async function getGroupById(groupId: string) {
+  return repo.groups.get(groupId);
+}
+
 export async function deleteGroup(groupId: string, ownerId: string) {
   const isOwner = await isGroupOwner(groupId, ownerId);
   if (!isOwner) {
@@ -21,7 +25,11 @@ export async function deleteGroup(groupId: string, ownerId: string) {
   return repo.groups.delete(groupId);
 }
 
-export async function renameGroup(groupId: string, newName: string, ownerId: string) {
+export async function renameGroup(
+  groupId: string,
+  newName: string,
+  ownerId: string,
+) {
   const group = await repo.groups.get(groupId);
 
   if (!group) {
@@ -38,9 +46,6 @@ export async function renameGroup(groupId: string, newName: string, ownerId: str
 export async function getGroupMembers(groupId: string) {
   return repo.groups.getGroupMembers(groupId);
 }
-
-
-
 
 export async function addUserToGroup(
   groupId: string,
