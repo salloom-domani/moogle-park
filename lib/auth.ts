@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 
 import { betterAuth } from "better-auth";
+import { admin } from "better-auth/plugins";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { PrismaClient } from "@prisma/client";
 
@@ -21,6 +22,7 @@ export const auth = betterAuth({
       scope: ["profile", "email"],
     },
   },
+  plugins: [admin()],
 });
 
 export async function getSession() {
