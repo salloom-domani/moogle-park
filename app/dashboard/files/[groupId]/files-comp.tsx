@@ -26,6 +26,7 @@ import {useQueryState} from "nuqs";
 import {cn} from "@/lib/utils";
 import {useRouter} from "next/navigation";
 import {Input} from "@/components/ui/input";
+import {FileState} from "@prisma/client";
 
 type FileComponentProps = {
     files: FileType[];
@@ -92,10 +93,17 @@ export default function FileComponent({
 
     const handleDoubleClick = async (file: FileType) => {
         try {
-            await checkOutFile({fileId: file.id, userId: ownerId});
+            if(file.state == FileState.USED) {
+                toast({
+                    title: "Failed to Open File ❌",
+                    description: `File in used Please try again later`,
+                    variant: "destructive",
+                });
+                return;
+            }
+            await checkInFile({fileId: file.id, userId: ownerId});
 
             const response = await getFileById({fileId: file.id});
-            console.log("Fetched File Response:", response);
 
             if (response && response.data) {
                 const fetchedFile = response.data.data as FileResponseType;
@@ -110,8 +118,8 @@ export default function FileComponent({
             }
         } catch (err) {
             toast({
-                title: "Failed to Check Out File ❌",
-                description: `Could not check out the file. Please try again. ${err}`,
+                title: "Failed to Check In File ❌",
+                description: `Could not check In into the file. Please try again. ${err}`,
                 variant: "destructive",
             });
         }
@@ -131,6 +139,8 @@ export default function FileComponent({
                     description: "The file content has been updated and a new version created.",
                     variant: "success",
                 });
+                router.refresh();
+
             } catch (err) {
                 toast({
                     title: "Failed to Update File ❌",
@@ -140,11 +150,10 @@ export default function FileComponent({
                 return;
             }
         }
-
         try {
-            await checkInFile({fileId: editingFile.id, userId: ownerId});
+            await checkOutFile({fileId: editingFile.id, userId: ownerId});
             toast({
-                title: "File Checked In ✅",
+                title: "File Checked Out ✅",
                 description: "The file is now available for others to edit.",
                 variant: "success",
             });
@@ -161,13 +170,14 @@ export default function FileComponent({
     const handleCancel = async () => {
         if (editingFile) {
             try {
-                await checkInFile({fileId: editingFile.id, userId: ownerId});
+                await checkOutFile({fileId: editingFile.id, userId: ownerId});
             } catch (err) {
                 toast({
-                    title: "Failed to Check In File ❌",
-                    description: `Could not check in the file. Please try again. ${err}`,
+                    title: "Failed to Check Out File ❌",
+                    description: `Could not check Out on file. Please try again. ${err}`,
                     variant: "destructive",
                 });
+                router.refresh();
             } finally {
                 setEditingFile(null);
             }

@@ -6,14 +6,14 @@ import {getGroupMembers} from "@/lib/services/groups";
 import {getAllUsers} from "@/lib/services/users";
 
 
-export default async function FilesPage({ params }: { params: never }) {
+export default async function FilesPage({ params }: { params: Promise<{groupId: string}> }) {
     const session = await getSession();
 
     if (!session) {
         return redirect("/auth/login");
     }
 
-    const { groupId } = params;
+    const { groupId } = await params;
 
     if (!groupId) {
         return redirect("/dashboard/groups");
