@@ -19,7 +19,6 @@ export async function getFilesInGroup(groupId: string) {
   return repo.files.getManyByGroup(groupId, { deletedAt: null });
 }
 
-
 export async function getMyDeletedFiles(userId: string) {
   return repo.files.getManyDeletedByUser(userId);
 }
@@ -67,8 +66,8 @@ export async function updateFile(
     throw new BadRequestError("File already deleted");
   }
 
-  if (file.state !== "FREE") {
-    throw new BadRequestError("File is in use");
+  if (file.state !== "USED") {
+    throw new BadRequestError("You cant update a non checked-in file");
   }
 
   const groups = await repo.groups.getManyByUser(userId);
@@ -106,7 +105,11 @@ export async function restoreFile(fileId: string, userId: string) {
   return repo.files.restore(fileId);
 }
 
-export async function renameFile(fileId: string, newName: string, userId: string) {
+export async function renameFile(
+  fileId: string,
+  newName: string,
+  userId: string,
+) {
   const file = await repo.files.get(fileId);
 
   if (!file) {
@@ -123,7 +126,6 @@ export async function renameFile(fileId: string, newName: string, userId: string
   }
   return repo.files.rename(fileId, newName);
 }
-
 
 export async function checkInFile(fileId: string, userId: string) {
   const file = await repo.files.get(fileId);
